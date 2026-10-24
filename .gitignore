@@ -1,0 +1,7 @@
+# Project Vault .gitignore
+desktop.ini
+*.bak
+*.bak.html
+*.tmp
+.DS_Store
+Thumbs.db
