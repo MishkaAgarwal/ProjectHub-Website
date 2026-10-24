@@ -3,5 +3,6 @@ desktop.ini
 *.bak
 *.bak.html
 *.tmp
+.token
 .DS_Store
 Thumbs.db
