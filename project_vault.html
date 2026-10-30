@@ -1905,6 +1905,32 @@
         color: #000 !important;
       }
     }
+    
+/* Mobile sidebar overlay */
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 90;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
 
     /* ─── Responsive Media Queries ─── */
     @media (max-width: 1200px) {
