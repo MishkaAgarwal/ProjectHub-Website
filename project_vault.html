@@ -1926,6 +1926,10 @@
         grid-template-columns: 1fr;
       }
 
+      .main-content {
+        grid-column: 1;
+      }
+
       .sidebar {
         position: fixed;
         left: -280px;
@@ -1965,6 +1969,16 @@
         width: 100%;
       }
     }
+
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 290;
+      display: none;
+    }
+    .sidebar-overlay.active { display: block; }
 
     /* ═══════════════════════════════════════════════
        GITHUB REPOSITORY ANALYSIS & FORM POPULATION UI
