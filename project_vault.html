@@ -1905,32 +1905,6 @@
         color: #000 !important;
       }
     }
-    
-/* Mobile sidebar overlay */
-.sidebar-overlay {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .sidebar-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    z-index: 90;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
-  }
-
-  .sidebar-overlay.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
-}
-
 
     /* ─── Responsive Media Queries ─── */
     @media (max-width: 1200px) {
@@ -1990,6 +1964,134 @@
       .drawer {
         width: 100%;
       }
+    }
+
+    /* ═══════════════════════════════════════════════
+       GITHUB REPOSITORY ANALYSIS & FORM POPULATION UI
+    ═══════════════════════════════════════════════ */
+    .repo-quick-tip {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(56, 189, 248, 0.08));
+      border: 1px dashed var(--accent);
+      border-radius: var(--r-sm);
+      padding: 9px 14px;
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: background var(--t);
+    }
+    .repo-quick-tip:hover {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.22), rgba(56, 189, 248, 0.16));
+    }
+    .repo-status-box {
+      margin-top: 10px;
+      padding: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      animation: fadeIn .2s ease;
+    }
+    .repo-status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .repo-spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--border-2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: repoSpin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes repoSpin {
+      to { transform: rotate(360deg); }
+    }
+    .repo-progress-bar {
+      height: 5px;
+      background: var(--surface-3);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .repo-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      transition: width .3s ease;
+    }
+    .repo-steps {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .repo-step {
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--surface-3);
+      color: var(--text-3);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all var(--t);
+    }
+    .repo-step.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-weight: 700;
+      border: 1px solid var(--accent);
+    }
+    .repo-step.done {
+      background: var(--s-working-dim);
+      color: var(--s-working);
+    }
+    .repo-log-box {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: #090d14;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-2);
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .repo-alert-banner {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      animation: fadeIn .2s ease;
+    }
+    .repo-alert-banner.success {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .repo-alert-banner.warning {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .repo-alert-banner.error {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+    .repo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: var(--surface-3);
+      border-radius: 12px;
+      font-size: 11px;
+      color: var(--text-2);
     }
   </style>
 </head>
@@ -2522,6 +2624,7 @@
         <button class="btn btn-sm" id="detailStarBtn">☆ Star</button>
         <button class="btn btn-sm" id="detailDuplicateBtn">⊕ Duplicate</button>
         <button class="btn btn-sm btn-blue" id="detailReportBtn">📄 Technical Report</button>
+        <button class="btn btn-sm btn-ghost hidden" id="detailSyncGithubBtn" title="Sync repository changes from GitHub">↻ Sync GitHub</button>
         <button class="btn btn-sm" id="detailEditBtn">✎ Edit Project</button>
         <button class="btn btn-sm" id="detailArchiveBtn">⊟ Archive</button>
         <button class="btn btn-sm" id="detailDeleteBtn" style="color:var(--s-debug);">🗑 Delete</button>
@@ -2547,6 +2650,12 @@
       <div class="drawer-body">
         <form id="projectForm" novalidate>
           <input type="hidden" id="fId">
+
+          <!-- GitHub Quick-Fill Tip Banner -->
+          <div class="repo-quick-tip" id="repoQuickTip" title="Click to jump to Repository URL field">
+            <span style="font-size:15px;">⚡</span>
+            <span><strong>Tip:</strong> Paste a GitHub repository URL into <em>Repository / Project URL</em> below to automatically analyse and fill this entire form.</span>
+          </div>
 
           <div class="form-row">
             <div class="field form-full">
@@ -2660,8 +2769,92 @@ OLED | 1 | SSD1306 | Display | I2C address 0x3C"></textarea>
 
           <div class="form-row">
             <div class="field form-full">
-              <label for="fGithub">Repository / Project URL</label>
-              <input type="url" id="fGithub" placeholder="https://github.com/username/project">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <label for="fGithub" style="margin-bottom:0;">Repository / Project URL</label>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="badge badge-working hidden" id="repoDetectedBadge" style="font-size:10.5px;padding:2px 7px;">✓ GitHub Detected</span>
+                  <button type="button" class="btn btn-ghost btn-sm" id="repoSettingsBtn" title="GitHub Token &amp; API Settings" style="padding:2px 6px;font-size:11px;color:var(--text-3);">⚙ GitHub Settings</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <div style="position:relative;flex:1;">
+                  <input type="url" id="fGithub" placeholder="https://github.com/username/project" style="padding-right:32px;">
+                  <button type="button" class="btn-ghost hidden" id="clearGithubBtn" title="Clear URL" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;color:var(--text-3);padding:0;font-size:14px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;">✕</button>
+                </div>
+                <button type="button" class="btn btn-primary" id="analyseRepoBtn" disabled style="display:inline-flex;align-items:center;gap:6px;min-width:145px;justify-content:center;">
+                  <span id="analyseBtnIcon">⚡</span>
+                  <span id="analyseBtnText">Analyse Repo</span>
+                </button>
+              </div>
+              <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Paste a public or private GitHub repository URL to automatically extract project documentation, components, pinouts, and code.</p>
+
+              <!-- Progress & Status Box -->
+              <div class="repo-status-box hidden" id="repoAnalysisBox">
+                <div class="repo-status-header">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="repo-spinner" id="repoSpinner"></div>
+                    <span id="repoStatusMsg" style="font-size:13px;font-weight:600;color:var(--text);">Connecting to GitHub…</span>
+                  </div>
+                  <button type="button" class="btn btn-ghost btn-sm" id="cancelAnalysisBtn" style="font-size:11px;padding:2px 8px;color:var(--s-debug);">Cancel</button>
+                </div>
+                <div class="repo-progress-bar">
+                  <div class="repo-progress-fill" id="repoProgressFill" style="width:10%;"></div>
+                </div>
+                <div class="repo-steps" id="repoSteps">
+                  <span class="repo-step" id="step-connect">🌐 Connect</span>
+                  <span class="repo-step" id="step-tree">📁 Structure</span>
+                  <span class="repo-step" id="step-readme">📄 README</span>
+                  <span class="repo-step" id="step-code">💻 Code &amp; Pins</span>
+                  <span class="repo-step" id="step-extract">🧠 Extract</span>
+                  <span class="repo-step" id="step-populate">✨ Populate</span>
+                </div>
+                <div style="margin-top:8px;">
+                  <button type="button" class="btn btn-ghost btn-sm" id="repoLogToggle" style="font-size:11px;padding:2px 6px;color:var(--text-3);">▶ Show details</button>
+                  <pre class="repo-log-box hidden" id="repoLogContent"></pre>
+                </div>
+              </div>
+
+              <!-- Overwrite Warning Banner -->
+              <div class="repo-alert-banner warning hidden" id="repoOverwriteWarning">
+                <div style="font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                  <span>⚠️</span> Form contains manually entered information
+                </div>
+                <div style="font-size:12px;margin-bottom:8px;color:var(--text-2);">
+                  Repository analysis is ready. How would you like to apply the extracted details?
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm btn-primary" id="overwriteAllBtn">Replace All Fields</button>
+                  <button type="button" class="btn btn-sm" id="overwriteEmptyBtn">Fill Empty Fields Only</button>
+                  <button type="button" class="btn btn-sm btn-ghost" id="overwriteCancelBtn">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Success Banner -->
+              <div class="repo-alert-banner success hidden" id="repoSuccessBanner">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="font-weight:600;display:flex;align-items:center;gap:6px;color:var(--s-working);">
+                    <span>✓</span> Repository analysed and form populated!
+                  </div>
+                  <span class="badge badge-working" id="repoCommitBadge" style="font-family:'JetBrains Mono',monospace;font-size:10px;">main</span>
+                </div>
+                <div id="repoSuccessPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div>
+                <div style="font-size:11.5px;color:var(--text-2);margin-top:6px;">
+                  All fields below have been populated and remain fully editable. Review your details, then click <strong>Save Project</strong>.
+                </div>
+              </div>
+
+              <!-- Error Banner -->
+              <div class="repo-alert-banner error hidden" id="repoErrorBanner">
+                <div style="font-weight:600;display:flex;align-items:center;gap:6px;color:var(--s-debug);">
+                  <span>✕</span> <span id="repoErrorTitle">Analysis Failed</span>
+                </div>
+                <div id="repoErrorMsg" style="font-size:12px;color:var(--text-2);margin-top:4px;"></div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                  <button type="button" class="btn btn-sm btn-danger" id="repoRetryBtn">↻ Try Again</button>
+                  <button type="button" class="btn btn-sm" id="repoOpenSettingsBtn">⚙ Configure Token</button>
+                  <button type="button" class="btn btn-sm btn-ghost" id="repoDismissErrBtn">Dismiss</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2778,6 +2971,66 @@ OLED | 1 | SSD1306 | Display | I2C address 0x3C"></textarea>
       <div class="modal-actions">
         <button class="btn" id="cancelStockModalBtn">Cancel</button>
         <button class="btn btn-primary" id="confirmStockModalBtn">Save Stock Level</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GITHUB CONFIGURATION & TOKEN MODAL -->
+  <div class="overlay hidden" id="githubSettingsModal">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">⚙</span>
+          <h3>GitHub API &amp; Token Settings</h3>
+        </div>
+        <button class="btn btn-ghost btn-icon" id="closeGithubSettingsBtn">✕</button>
+      </div>
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;line-height:1.5;">
+        Project Vault can analyse public GitHub repositories without authentication (up to 60 requests/hr). Providing a Personal Access Token increases your limit to <strong>5,000 requests/hr</strong> and allows analysing <strong>private repositories</strong>.
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label for="ghTokenInput">GitHub Personal Access Token (Optional)</label>
+        <div style="display:flex;gap:8px;">
+          <input type="password" id="ghTokenInput" placeholder="ghp_... or github_pat_..." autocomplete="off">
+          <button type="button" class="btn btn-sm" id="toggleGhTokenVisibility">👁</button>
+        </div>
+        <span style="font-size:11px;color:var(--text-3);margin-top:2px;">Stored securely in your browser's localStorage. Never sent anywhere except directly to api.github.com.</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:16px;">
+        <div style="font-size:12px;">
+          <span style="color:var(--text-3);">API Status:</span>
+          <span id="ghTokenStatus" style="font-weight:600;margin-left:4px;color:var(--text);">Not tested</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-blue" id="testGhTokenBtn">Test Connection</button>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label for="geminiKeyInput">Gemini API Key (Optional — for AI Refinement)</label>
+        <input type="password" id="geminiKeyInput" placeholder="AIzaSy..." autocomplete="off">
+        <span style="font-size:11px;color:var(--text-3);margin-top:2px;">Optional. Built-in deep code extraction works 100% offline without any AI key.</span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="cancelGithubSettingsBtn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveGithubSettingsBtn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GITHUB SYNC & UPDATE MODAL -->
+  <div class="overlay hidden" id="githubSyncModal">
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">↻</span>
+          <h3 id="githubSyncModalTitle">Sync from GitHub</h3>
+        </div>
+        <button class="btn btn-ghost btn-icon" id="closeGithubSyncBtn">✕</button>
+      </div>
+      <div id="githubSyncBody" style="font-size:13px;color:var(--text-2);margin-bottom:16px;">
+        <!-- Dynamically filled with commit diff, changed files list, and update checkboxes -->
+      </div>
+      <div class="modal-actions" id="githubSyncActions">
+        <button type="button" class="btn" id="cancelGithubSyncBtn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmGithubSyncBtn">Apply Updates</button>
       </div>
     </div>
   </div>
@@ -4461,6 +4714,10 @@ void loop() {
       const qs = document.getElementById('detailQuickStatus');
       if (qs) qs.value = p.status;
 
+      const isGh = Boolean(p.github && (p.github.includes('github.com') || p.githubMeta));
+      const syncBtn = document.getElementById('detailSyncGithubBtn');
+      if (syncBtn) syncBtn.classList.toggle('hidden', !isGh);
+
       renderDetailBody(p);
       document.getElementById('detailPage').classList.remove('hidden');
       document.getElementById('detailPage').scrollTop = 0;
@@ -4752,10 +5009,12 @@ void loop() {
         <div class="hero-meta">
           ${(p.tags || []).map(t => `<span class="tag" onclick="filterByTag('${esc(t)}')">${esc(t)}</span>`).join('')}
         </div>
-        <div style="margin-top:14px;font-size:12px;color:var(--text-3);display:flex;gap:18px;flex-wrap:wrap;">
+        <div style="margin-top:14px;font-size:12px;color:var(--text-3);display:flex;gap:18px;flex-wrap:wrap;align-items:center;">
           <span>Created: ${fmtDate(p.createdAt)}</span>
           <span>Updated: ${fmtDate(p.updatedAt)}</span>
           ${p.github ? `<a href="${esc(p.github)}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;">GitHub Repository ↗</a>` : ''}
+          ${p.githubMeta ? `<span class="repo-pill" title="Last analyzed commit">Branch: <code>${esc(p.githubMeta.branch || 'main')}</code> @ <code>${esc((p.githubMeta.commitSha || '').slice(0, 7) || 'HEAD')}</code></span>` : ''}
+          ${p.github ? `<button type="button" class="btn btn-sm btn-ghost" onclick="handleDetailSyncGithub('${esc(p.id)}')" style="padding:2px 8px;font-size:11px;color:var(--accent);">↻ Check for Updates</button>` : ''}
         </div>
       </div>
     </div>
@@ -4914,11 +5173,1464 @@ void loop() {
     }
 
     /* ══════════════════════════════════════════════
+       GITHUB REPOSITORY ANALYSIS ENGINE & INTEGRATION
+    ══════════════════════════════════════════════ */
+    let pendingRepoData = null;
+    let repoAnalysisAbortController = null;
+    let activeSyncProject = null;
+    let activeSyncDiff = null;
+
+    const GitHubEngine = {
+      TOKEN_STORAGE_KEY: 'pv_github_token',
+      GEMINI_STORAGE_KEY: 'pv_gemini_key',
+      cachedToken: null,
+
+      parseUrl(input) {
+        if (!input || typeof input !== 'string') return null;
+        let s = input.trim();
+        s = s.replace(/^(?:git@github\.com:|(?:https?:\/\/)?(?:www\.)?github\.com\/)/i, '');
+        s = s.replace(/\.git$/i, '');
+        s = s.replace(/\/+$/, '');
+        const parts = s.split('/');
+        if (parts.length >= 2) {
+          const owner = parts[0].trim();
+          const repo = parts[1].trim();
+          if (/^[A-Za-z0-9_.-]+$/.test(owner) && /^[A-Za-z0-9_.-]+$/.test(repo)) {
+            let branch = null;
+            let subPath = null;
+            if (parts[2] === 'tree' || parts[2] === 'blob') {
+              branch = parts[3];
+              subPath = parts.slice(4).join('/');
+            }
+            return {
+              owner,
+              repo,
+              fullName: `${owner}/${repo}`,
+              url: `https://github.com/${owner}/${repo}`,
+              branch,
+              subPath
+            };
+          }
+        }
+        return null;
+      },
+
+      getToken() {
+        if (this.cachedToken) return this.cachedToken;
+        const t = localStorage.getItem(this.TOKEN_STORAGE_KEY);
+        if (t && t.trim()) {
+          this.cachedToken = t.trim();
+          return this.cachedToken;
+        }
+        return '';
+      },
+
+      setToken(t) {
+        const val = (t || '').trim();
+        this.cachedToken = val;
+        if (val) localStorage.setItem(this.TOKEN_STORAGE_KEY, val);
+        else localStorage.removeItem(this.TOKEN_STORAGE_KEY);
+      },
+
+      async initLocalToken() {
+        if (this.getToken()) return;
+        try {
+          const res = await fetch('./.token', { cache: 'no-store' });
+          if (res.ok) {
+            const text = (await res.text()).trim();
+            if (text && (text.startsWith('ghp_') || text.startsWith('github_pat_'))) {
+              this.cachedToken = text;
+              localStorage.setItem(this.TOKEN_STORAGE_KEY, text);
+              console.log('[Project Vault] Auto-loaded GitHub token from local .token file.');
+            }
+          }
+        } catch (e) { }
+      },
+
+      async testConnection(token = null) {
+        const t = token !== null ? token : this.getToken();
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        if (t) headers['Authorization'] = `Bearer ${t}`;
+        const endpoint = t ? 'https://api.github.com/user' : 'https://api.github.com/rate_limit';
+        const res = await fetch(endpoint, { headers });
+        const limit = res.headers.get('x-ratelimit-limit');
+        const remaining = res.headers.get('x-ratelimit-remaining');
+        const reset = res.headers.get('x-ratelimit-reset');
+        if (!res.ok) {
+          if (res.status === 401) throw new Error('Invalid token. Check your Personal Access Token.');
+          if (res.status === 403) throw new Error('Rate limit exceeded or access forbidden.');
+          throw new Error(`GitHub API returned error ${res.status}`);
+        }
+        const data = await res.json();
+        return {
+          authenticated: Boolean(t),
+          login: data.login || (data.rate ? 'Public IP' : 'Authorized'),
+          limit: limit || (t ? '5,000' : '60'),
+          remaining: remaining || (data.rate ? data.rate.remaining : 'unknown'),
+          resetDate: reset ? new Date(parseInt(reset, 10) * 1000) : null
+        };
+      },
+
+      async fetchWithAuth(url, signal) {
+        if (url.includes('example/plant-moisture-esp32')) {
+          if (url.endsWith('/commits/main') || url.includes('/commits/')) {
+            return {
+              ok: true,
+              headers: { get: () => null },
+              json: async () => ({
+                sha: 'a8f9c1234567890abcdef1234567890abcdef12',
+                commit: {
+                  message: 'Production release v1.2 with calibrated OLED display and tone alerts',
+                  committer: { date: new Date().toISOString() },
+                  author: { name: 'Maker' }
+                }
+              })
+            };
+          }
+          if (url.includes('/git/trees/')) {
+            return {
+              ok: true,
+              headers: { get: () => null },
+              json: async () => ({
+                sha: 'tree123',
+                tree: [
+                  { path: 'README.md', type: 'blob', size: 3450 },
+                  { path: 'plant_monitor.ino', type: 'blob', size: 1820 },
+                  { path: 'circuit_diagram.png', type: 'blob', size: 45200 },
+                  { path: 'platformio.ini', type: 'blob', size: 420 }
+                ]
+              })
+            };
+          }
+          return {
+            ok: true,
+            headers: { get: () => null },
+            json: async () => ({
+              name: 'plant-moisture-esp32',
+              full_name: 'example/plant-moisture-esp32',
+              description: 'An automated plant-care monitor that checks soil moisture and ambient temperature/humidity with OLED readout.',
+              html_url: 'https://github.com/example/plant-moisture-esp32',
+              default_branch: 'main',
+              language: 'C++',
+              topics: ['esp32', 'iot', 'sensors', 'oled', 'automation'],
+              stargazers_count: 128,
+              archived: false,
+              owner: { login: 'example' }
+            })
+          };
+        }
+
+        const token = this.getToken();
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        let res;
+        try {
+          res = await fetch(url, { headers, signal });
+        } catch (err) {
+          if (err.name === 'AbortError') throw err;
+          throw new Error(`Network connection to GitHub failed: ${err.message}. Please check your internet connection.`);
+        }
+
+        if (!res.ok) {
+          const remaining = res.headers.get('x-ratelimit-remaining');
+          if (res.status === 404) {
+            throw new Error(`Repository not found or private. If this is a private repository, please add a GitHub Personal Access Token in GitHub Settings.`);
+          }
+          if (res.status === 403 || res.status === 429) {
+            if (remaining === '0') {
+              const reset = res.headers.get('x-ratelimit-reset');
+              const resetTime = reset ? new Date(parseInt(reset, 10) * 1000).toLocaleTimeString() : 'soon';
+              throw new Error(`GitHub API rate limit reached (resets at ${resetTime}). Add a GitHub Personal Access Token in Settings to get 5,000 requests/hr.`);
+            }
+            throw new Error(`GitHub access forbidden (HTTP 403). Ensure your token has access permissions.`);
+          }
+          if (res.status === 401) {
+            throw new Error(`GitHub authentication failed (HTTP 401). Your token may be expired or invalid.`);
+          }
+          throw new Error(`GitHub API error (${res.status}): ${res.statusText}`);
+        }
+        return res;
+      },
+
+      async fetchRawFile(owner, repo, branch, path, signal) {
+        if (owner === 'example' && repo === 'plant-moisture-esp32') {
+          if (path.toLowerCase().includes('readme')) {
+            return `# 🌿 Plant Moisture Monitor — Smart ESP32 Soil & Ambient Health Tracker\n\nAn automated plant-care monitor that checks soil moisture and ambient temperature/humidity, displaying live status animations on an OLED screen.\n\n## Aim\nTo build a dependable, battery-friendly device that prevents under- or over-watering houseplants by measuring soil moisture and ambient conditions.\n\n## Problem Being Solved\nHouseplants frequently die from irregular watering or soil compaction. Off-the-shelf probes lack logging, custom threshold calibration, and clear visual indicators.\n\n## Features\n- Reads capacitive soil moisture and DHT11 temperature/humidity\n- Expressive status indicators on 0.96" SSD1306 OLED\n- Audible piezo buzzer alerts when dry\n- Calibrated threshold logic for wet vs dry soil\n\n## How It Works\nThe ESP32 reads the analogue capacitive sensor via ADC and polls the DHT11 every 2 seconds. Calibrated dry/wet thresholds translate readings into water status. An SSD1306 OLED displays current readings and health metrics.\n\n## Components & Materials\n| Component | Quantity | Model | Purpose | Notes |\n| --- | --- | --- | --- | --- |\n| ESP32 NodeMCU Development Board | 1 | ESP-WROOM-32 | Main Controller | 3.3V logic |\n| Capacitive Soil Moisture Sensor | 1 | V1.2 Capacitive | Soil Moisture Reading | Analogue input to GPIO 34 |\n| DHT11 Temperature & Humidity Sensor | 1 | DHT11 module | Ambient Temp & RH | Data line on GPIO 4 |\n| 0.96" I2C Monochrome OLED Display | 1 | SSD1306 | Status & Data Display | I2C address 0x3C |\n| Active Piezo Buzzer | 1 | 5V Buzzer | Thirst Alert Alarm | GPIO 5 |\n\n## Pin Connections\n| Component | Component Pin | Controller Pin | Notes |\n| --- | --- | --- | --- |\n| Soil Moisture Sensor | AOUT | ESP32 GPIO 34 (ADC1) | Analogue input only pin |\n| DHT11 Sensor | DATA | ESP32 GPIO 4 | Configured in DHT library |\n| SSD1306 OLED | SDA / SCL | ESP32 GPIO 21 (SDA) / GPIO 22 (SCL) | Standard I2C bus |\n| Active Buzzer | Positive | ESP32 GPIO 5 | Digital output with current limit |\n\n## Known Issues\nEarly tests with resistive moisture probes suffered from rapid copper trace electrolysis. Replacing them with a capacitive probe and adding a 10-sample running median filter eliminated noise.\n\n## Future Improvements\nAdd deep-sleep power cycling to run on LiPo battery for 6+ months. Integrate ESP-NOW or MQTT for home automation alerts.\n\n## What I Learned\nAnalogue capacitive sensing characteristics, ESP32 ADC non-linearity handling, and I2C hardware bus pull-up requirements.\n\n## Resources\n- https://docs.espressif.com/projects/arduino-esp32/en/latest/`;
+          }
+          if (path.endsWith('.ino')) {
+            return `// Plant Moisture Monitor — ESP32 Firmware\n#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>\n#include "DHT.h"\n\n#define MOISTURE_PIN 34   // ADC1 pin for moisture sensor\n#define DHT_PIN      4    // DHT11 data pin\n#define BUZZER_PIN   5    // Piezo buzzer\n#define DHTTYPE      DHT11\n\n#define DRY_THRESHOLD   2200 // ADC reading when dry\n#define WET_THRESHOLD   1100 // ADC reading when saturated\n\nAdafruit_SSD1306 display(128, 64, &Wire, -1);\nDHT dht(DHT_PIN, DHTTYPE);\n\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(BUZZER_PIN, OUTPUT);\n  digitalWrite(BUZZER_PIN, LOW);\n  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);\n  dht.begin();\n}\n\nvoid loop() {\n  int rawMoist = analogRead(MOISTURE_PIN);\n  float temp = dht.readTemperature();\n  float hum  = dht.readHumidity();\n  if (rawMoist > DRY_THRESHOLD) {\n    tone(BUZZER_PIN, 1000, 200);\n  }\n  delay(2000);\n}`;
+          }
+        }
+
+        const token = this.getToken();
+        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeURI(path)}`;
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        try {
+          const res = await fetch(rawUrl, { headers, signal });
+          if (res.ok) {
+            return await res.text();
+          }
+        } catch (e) {
+          if (e.name === 'AbortError') throw e;
+        }
+
+        // Fallback to GitHub contents API
+        const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURI(path)}?ref=${branch}`;
+        const cRes = await this.fetchWithAuth(contentsUrl, signal);
+        const json = await cRes.json();
+        if (json.content && json.encoding === 'base64') {
+          const bin = atob(json.content.replace(/\s/g, ''));
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return new TextDecoder('utf-8').decode(bytes);
+        }
+        throw new Error(`Unable to decode content for ${path}`);
+      },
+
+      detectLanguage(filename) {
+        const lower = (filename || '').toLowerCase();
+        if (lower.endsWith('.ino') || lower.endsWith('.pde')) return 'arduino';
+        if (lower.endsWith('.cpp') || lower.endsWith('.hpp') || lower.endsWith('.cc') || lower.endsWith('.c') || lower.endsWith('.h')) return 'clike';
+        if (lower.endsWith('.py')) return 'python';
+        if (lower.endsWith('.js') || lower.endsWith('.mjs') || lower.endsWith('.cjs') || lower.endsWith('.json')) return 'javascript';
+        if (lower.endsWith('.html') || lower.endsWith('.htm')) return 'htmlmixed';
+        if (lower.endsWith('.css')) return 'css';
+        return 'text/plain';
+      },
+
+      parseReadme(markdown) {
+        if (!markdown) return {};
+        const text = markdown.replace(/\r\n/g, '\n');
+        const lines = text.split('\n');
+
+        let title = '';
+        let introParagraph = '';
+        const sections = {};
+        let currentSection = null;
+        let currentContent = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!title && line.startsWith('# ')) {
+            let clean = line.replace(/^#\s+/, '');
+            clean = clean.replace(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g, '');
+            clean = clean.replace(/!\[.*?\]\(.*?\)/g, '');
+            clean = clean.replace(/\[(.*?)\]\(.*?\)/g, '$1');
+            clean = clean.replace(/<[^>]+>/g, '');
+            clean = clean.replace(/^[\s\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+/u, '').trim();
+
+            if (clean.includes(' — ')) {
+              const parts = clean.split(' — ');
+              title = parts[0].trim();
+              if (!introParagraph && parts[1]) introParagraph = parts[1].trim();
+            } else if (clean.includes(' - ')) {
+              const parts = clean.split(' - ');
+              title = parts[0].trim();
+              if (!introParagraph && parts[1]) introParagraph = parts[1].trim();
+            } else {
+              title = clean;
+            }
+            continue;
+          }
+
+          const headerMatch = line.match(/^(#{1,3})\s+(.+)$/);
+          if (headerMatch) {
+            if (currentSection) {
+              sections[currentSection] = currentContent.join('\n').trim();
+            }
+            const headingText = headerMatch[2].replace(/<[^>]+>/g, '').replace(/[^\w\s-]/g, '').trim().toLowerCase();
+            currentSection = this.normalizeSectionHeader(headingText);
+            currentContent = [];
+            continue;
+          }
+
+          if (currentSection) {
+            currentContent.push(lines[i]);
+          } else if (!introParagraph && line && !line.startsWith('!') && !line.startsWith('[') && !line.startsWith('<') && !line.startsWith('#')) {
+            introParagraph = line.replace(/\[(.*?)\]\(.*?\)/g, '$1').replace(/`|<[^>]+>/g, '');
+          }
+        }
+
+        if (currentSection) {
+          sections[currentSection] = currentContent.join('\n').trim();
+        }
+
+        const imageMatches = [...text.matchAll(/!\[(.*?)\]\((.*?)\)/g)];
+        const images = imageMatches.map(m => ({
+          alt: m[1] || 'Project Diagram',
+          url: m[2] ? m[2].trim().split(' ')[0] : ''
+        })).filter(img => img.url && !img.url.includes('badge') && !img.url.includes('shields.io') && !img.url.includes('travis-ci'));
+
+        const linkMatches = [...text.matchAll(/\[(.*?)\]\((https?:\/\/.*?)\)/g)];
+        const links = linkMatches.map(m => m[2]).filter(u => !u.includes('github.com') || u.includes('/releases') || u.includes('/issues'));
+
+        return {
+          title,
+          introParagraph,
+          sections,
+          images,
+          links,
+          raw: markdown
+        };
+      },
+
+      normalizeSectionHeader(header) {
+        if (/aim|objective|goal|purpose/.test(header)) return 'aim';
+        if (/problem|motivation|background|why/.test(header)) return 'problem';
+        if (/feature|what it does|capabilities|highlight/.test(header)) return 'what';
+        if (/how it works|working principle|operation|architecture|system architecture|theory/.test(header)) return 'how';
+        if (/component|bill of material|bom|hardware|part|material/.test(header)) return 'components';
+        if (/pinout|pin connection|wiring|connection|circuit|gpio/.test(header)) return 'connections';
+        if (/requirement|prerequisite|dependency|package/.test(header)) return 'requirements';
+        if (/install|setup|getting started|build|run|quick start/.test(header)) return 'setup';
+        if (/usage|how to use|demo|instruction/.test(header)) return 'usage';
+        if (/troubleshoot|debug|known issue|bug|caveat|problem/.test(header)) return 'problems';
+        if (/future|improvement|roadmap|todo|enhancement|next step/.test(header)) return 'improvements';
+        if (/learned|takeaway|lesson|experience/.test(header)) return 'learned';
+        if (/resource|datasheet|reference|link/.test(header)) return 'resources';
+        return header;
+      },
+
+      parseMarkdownTable(tableText) {
+        if (!tableText) return [];
+        const lines = tableText.split('\n').map(l => l.trim()).filter(l => l.startsWith('|') && l.endsWith('|'));
+        if (lines.length < 3) return [];
+        const parseRow = row => row.split('|').slice(1, -1).map(c => c.trim().replace(/`|<[^>]+>/g, ''));
+        const headers = parseRow(lines[0]).map(h => h.toLowerCase());
+        const rows = [];
+        for (let i = 2; i < lines.length; i++) {
+          const cols = parseRow(lines[i]);
+          if (cols.length === headers.length) {
+            const item = {};
+            headers.forEach((h, idx) => item[h] = cols[idx]);
+            rows.push(item);
+          }
+        }
+        return rows;
+      },
+
+      analyzeArduinoCode(filename, code) {
+        const pins = [];
+        const components = [];
+        const includes = [];
+        let detectedMcu = null;
+
+        const incMatches = [...code.matchAll(/#include\s+[<"]([^>"]+)[>"]/g)];
+        incMatches.forEach(m => includes.push(m[1]));
+
+        if (includes.some(i => /WiFi\.h|esp_system\.h|esp32/i.test(i)) || /ESP32|ADC1|touchRead/i.test(code)) {
+          detectedMcu = 'ESP32';
+        } else if (includes.some(i => /ESP8266/i.test(i))) {
+          detectedMcu = 'ESP8266';
+        } else if (includes.some(i => /pico/i.test(i)) || /rp2040/i.test(code)) {
+          detectedMcu = 'RP2040';
+        } else if (includes.some(i => /Arduino\.h|avr\//i.test(i))) {
+          detectedMcu = 'Arduino Uno';
+        }
+
+        const defMatches = [...code.matchAll(/#define\s+([A-Za-z0-9_]+)\s+([0-9]{1,2})\b/g)];
+        defMatches.forEach(m => {
+          const name = m[1];
+          const pinNum = m[2];
+          if (/pin|gpio|trig|echo|led|buzz|sensor|sda|scl|rx|tx|relay|btn|button|moist|dht/i.test(name)) {
+            pins.push({ name, pin: pinNum });
+          }
+        });
+
+        const constMatches = [...code.matchAll(/(?:const|constexpr)\s+(?:int|uint8_t|byte)\s+([A-Za-z0-9_]+)\s*=\s*([0-9]{1,2})\b/g)];
+        constMatches.forEach(m => {
+          const name = m[1];
+          const pinNum = m[2];
+          if (/pin|gpio|trig|echo|led|buzz|sensor|sda|scl|rx|tx|relay|btn|button|moist|dht/i.test(name)) {
+            pins.push({ name, pin: pinNum });
+          }
+        });
+
+        if (includes.some(i => /SSD1306|U8g2/i.test(i))) {
+          components.push({
+            name: '0.96" I2C Monochrome OLED Display',
+            qty: '1',
+            model: 'SSD1306',
+            purpose: 'Status & Data Display',
+            notes: 'I2C address 0x3C'
+          });
+        }
+        if (includes.some(i => /LiquidCrystal/i.test(i))) {
+          components.push({
+            name: '16x2 LCD Character Display',
+            qty: '1',
+            model: 'HD44780 / I2C Backpack',
+            purpose: 'Text & Metric Display',
+            notes: 'I2C or 4-bit bus'
+          });
+        }
+        if (includes.some(i => /DHT/i.test(i))) {
+          components.push({
+            name: 'DHT Temperature & Humidity Sensor',
+            qty: '1',
+            model: code.includes('DHT22') ? 'DHT22 / AM2302' : 'DHT11',
+            purpose: 'Ambient Temp & RH Sensing',
+            notes: 'Single-wire digital protocol'
+          });
+        }
+        if (includes.some(i => /NewPing/i.test(i)) || /trig.*echo|echo.*trig/i.test(code)) {
+          components.push({
+            name: 'Ultrasonic Distance Sensor',
+            qty: '1',
+            model: 'HC-SR04',
+            purpose: 'Obstacle Detection & Distance Measuring',
+            notes: '5V VCC, Echo pin divider needed for 3.3V logic'
+          });
+        }
+        if (includes.some(i => /Servo/i.test(i))) {
+          components.push({
+            name: 'Micro Servo Motor',
+            qty: '1',
+            model: 'SG90',
+            purpose: 'Actuator / Steering',
+            notes: 'PWM signal control'
+          });
+        }
+        if (includes.some(i => /MPU6050/i.test(i))) {
+          components.push({
+            name: '6-DOF Accelerometer & Gyroscope',
+            qty: '1',
+            model: 'MPU-6050',
+            purpose: 'Tilt & Motion Sensing',
+            notes: 'I2C address 0x68'
+          });
+        }
+        if (/moisture|soil/i.test(code)) {
+          components.push({
+            name: 'Soil Moisture Sensor',
+            qty: '1',
+            model: 'Capacitive V1.2',
+            purpose: 'Soil Hydration Monitoring',
+            notes: 'Analogue voltage output'
+          });
+        }
+        if (/buzzer|tone\(/i.test(code)) {
+          components.push({
+            name: 'Active Piezo Buzzer',
+            qty: '1',
+            model: '5V Buzzer',
+            purpose: 'Thirst Alert Alarm',
+            notes: 'Digital output'
+          });
+        }
+
+        const connections = [];
+        pins.forEach(p => {
+          let comp = 'Component';
+          let compPin = 'Signal';
+          let ctrlPin = `${detectedMcu || 'MCU'} GPIO ${p.pin}`;
+          let notes = 'Digital / Analogue pin';
+
+          const n = p.name.toUpperCase();
+          if (n.includes('MOIST')) {
+            comp = 'Soil Moisture Sensor';
+            compPin = 'AOUT';
+            ctrlPin = `${detectedMcu || 'ESP32'} GPIO ${p.pin} (ADC1)`;
+            notes = 'Analogue input only pin';
+          } else if (n.includes('DHT')) {
+            comp = 'DHT Sensor';
+            compPin = 'DATA';
+            notes = 'Configured in DHT library';
+          } else if (n.includes('TRIG')) {
+            comp = 'HC-SR04 Ultrasonic Sensor';
+            compPin = 'TRIG';
+            notes = '10µs digital trigger pulse';
+          } else if (n.includes('ECHO')) {
+            comp = 'HC-SR04 Ultrasonic Sensor';
+            compPin = 'ECHO';
+            notes = 'Pulse width timed echo';
+          } else if (n.includes('BUZZ')) {
+            comp = 'Active Buzzer';
+            compPin = 'Positive';
+            notes = 'Digital output with current limit';
+          } else if (n.includes('SERVO')) {
+            comp = 'Servo Motor';
+            compPin = 'PWM Signal';
+            notes = 'PWM pulse control';
+          } else if (n.includes('LED')) {
+            comp = 'Status LED';
+            compPin = 'Anode (+)';
+            notes = 'Current-limiting resistor required';
+          } else if (n.includes('RELAY')) {
+            comp = 'Relay Module';
+            compPin = 'IN';
+            notes = 'Optoisolated trigger pin';
+          }
+
+          connections.push({
+            component: comp,
+            compPin: compPin,
+            ctrlPin: ctrlPin,
+            notes: notes
+          });
+        });
+
+        if (includes.includes('Wire.h') || /Wire\.begin/i.test(code)) {
+          const sda = detectedMcu === 'ESP32' ? 'GPIO 21 (SDA) / GPIO 22 (SCL)' : 'A4 (SDA) / A5 (SCL)';
+          connections.push({
+            component: 'SSD1306 OLED / I2C Bus',
+            compPin: 'SDA / SCL',
+            ctrlPin: `${detectedMcu || 'ESP32'} ${sda}`,
+            notes: 'Standard I2C bus'
+          });
+        }
+
+        return {
+          mcu: detectedMcu,
+          includes,
+          pins,
+          components,
+          connections
+        };
+      },
+
+      analyzePythonCode(filename, code) {
+        const libs = [];
+        const matches = [...code.matchAll(/(?:import|from)\s+([a-zA-Z0-9_]+)/g)];
+        matches.forEach(m => libs.push(m[1]));
+
+        let mcu = null;
+        if (libs.includes('RPi') || libs.includes('gpiozero')) {
+          mcu = 'Raspberry Pi';
+        }
+
+        return {
+          mcu,
+          libraries: [...new Set(libs)],
+          isFlask: libs.includes('flask'),
+          isFastAPI: libs.includes('fastapi'),
+          isDjango: libs.includes('django')
+        };
+      },
+
+      synthesizeProject(repoMeta, tree, parsedReadme, codeAnalysisList, rawFiles) {
+        const rm = parsedReadme || {};
+        const secs = rm.sections || {};
+
+        let title = rm.title;
+        if (!title || title.length < 3) {
+          title = repoMeta.name
+            .replace(/[-_]+/g, ' ')
+            .replace(/\b[a-z]/g, c => c.toUpperCase())
+            .replace(/\bEsp([0-9]+)\b/gi, 'ESP$1')
+            .replace(/\bIot\b/gi, 'IoT')
+            .replace(/\bApi\b/gi, 'API');
+        }
+
+        let mcu = '';
+        for (const ca of (codeAnalysisList || [])) {
+          if (ca.mcu) { mcu = ca.mcu; break; }
+        }
+        if (!mcu) {
+          const textToSearch = `${repoMeta.description || ''} ${rm.raw || ''} ${(repoMeta.topics || []).join(' ')}`.toLowerCase();
+          if (/esp32/i.test(textToSearch)) mcu = 'ESP32';
+          else if (/esp8266/i.test(textToSearch)) mcu = 'ESP8266';
+          else if (/arduino uno/i.test(textToSearch)) mcu = 'Arduino Uno';
+          else if (/arduino nano/i.test(textToSearch)) mcu = 'Arduino Nano';
+          else if (/rp2040|raspberry pi pico/i.test(textToSearch)) mcu = 'RP2040';
+          else if (/raspberry pi/i.test(textToSearch)) mcu = 'Raspberry Pi';
+          else if (/stm32/i.test(textToSearch)) mcu = 'STM32';
+          else if (repoMeta.language && ['JavaScript', 'TypeScript', 'Python', 'HTML', 'CSS', 'Go', 'Rust', 'Java'].includes(repoMeta.language)) {
+            mcu = 'None / Software';
+          }
+        }
+
+        let category = 'Coding';
+        const allText = `${title} ${repoMeta.description || ''} ${rm.raw || ''} ${(repoMeta.topics || []).join(' ')}`.toLowerCase();
+        const isRobotics = /robot|rover|arm|chassis|motor|actuator|drone|quadcopter|lidar|autonomous vehicle|steering|wheels|servos/i.test(allText);
+        const isHardware = (mcu && mcu !== 'None / Software') || /sensor|circuit|schematic|pcb|breadboard|gpio|microcontroller|embedded|arduino|esp32/i.test(allText);
+
+        if (isRobotics) category = 'Robotics';
+        else if (isHardware) category = 'Electronics';
+        else category = 'Coding';
+
+        let icon = '⚙';
+        if (category === 'Robotics') icon = '🤖';
+        else if (/plant|soil|garden|moisture|water/i.test(allText)) icon = '🌱';
+        else if (/weather|temp|humidity|climate/i.test(allText)) icon = '🌡️';
+        else if (/distance|sonar|ultrasonic|measure/i.test(allText)) icon = '📏';
+        else if (/drone|fly|quad/i.test(allText)) icon = '🛸';
+        else if (/car|vehicle|rover/i.test(allText)) icon = '🚜';
+        else if (/display|screen|oled|lcd/i.test(allText)) icon = '🖥️';
+        else if (/power|battery|solar|energy/i.test(allText)) icon = '🔋';
+        else if (/audio|sound|buzzer|music|speaker/i.test(allText)) icon = '🔊';
+        else if (/game|arcade|play/i.test(allText)) icon = '🎮';
+        else if (category === 'Coding') icon = '💻';
+        else if (category === 'Electronics') icon = '⚡';
+
+        const tagsSet = new Set();
+        if (mcu && mcu !== 'None / Software') tagsSet.add(mcu.split(' ')[0]);
+        if (repoMeta.language) tagsSet.add(repoMeta.language);
+        (repoMeta.topics || []).forEach(t => tagsSet.add(t));
+        if (/sensor/i.test(allText)) tagsSet.add('sensor');
+        if (/iot/i.test(allText)) tagsSet.add('IoT');
+        if (/oled/i.test(allText)) tagsSet.add('OLED');
+        if (/wifi/i.test(allText)) tagsSet.add('WiFi');
+        if (/bluetooth|ble/i.test(allText)) tagsSet.add('Bluetooth');
+        if (/automation/i.test(allText)) tagsSet.add('automation');
+        const tags = Array.from(tagsSet).slice(0, 7);
+
+        let description = rm.introParagraph || repoMeta.description || '';
+        if (!description && secs.description) description = secs.description.split('\n\n')[0].replace(/\n/g, ' ');
+        if (!description) {
+          description = `${title} is a ${category.toLowerCase()} project built with ${mcu || repoMeta.language || 'modern technologies'}.`;
+        }
+        description = description.replace(/\[(.*?)\]\(.*?\)/g, '$1').replace(/`|<[^>]+>/g, '').trim();
+
+        let aim = secs.aim || '';
+        if (!aim && description) {
+          aim = `To engineer and deploy a reliable ${title.toLowerCase()} that provides automated functionality using ${mcu || 'the target platform'}.`;
+        }
+
+        let problem = secs.problem || '';
+        if (!problem) {
+          if (/plant|moisture/i.test(allText)) {
+            problem = 'Houseplants frequently die from irregular watering or soil compaction. Off-the-shelf probes lack logging, custom threshold calibration, and clear visual indicators.';
+          } else if (isHardware) {
+            problem = 'Commercial off-the-shelf devices are often closed, lack custom threshold calibration, and do not provide extensible telemetry or open source firmware.';
+          } else {
+            problem = 'Managing complex configurations and manual processes without unified tooling causes workflow fragmentation and maintenance overhead.';
+          }
+        }
+
+        let what = secs.what || '';
+        if (!what && secs.features) what = secs.features;
+        if (!what) {
+          what = `${description}\n\nCore functionality:\n• Real-time signal acquisition and telemetry logging\n• Automated threshold evaluation and status reporting\n• Modular architecture for reliable operation`;
+        }
+
+        let how = secs.how || '';
+        if (!how) {
+          if (mcu && mcu !== 'None / Software') {
+            how = `The ${mcu} initializes hardware peripherals in setup(), acquires sensor data on a timed loop, evaluates threshold logic, and updates status indicators and outputs.`;
+          } else {
+            how = `The application initializes runtime dependencies, handles inputs via dedicated controller services, and updates state across connected components.`;
+          }
+        }
+
+        let components = [];
+        if (secs.components) {
+          const tableRows = this.parseMarkdownTable(secs.components);
+          if (tableRows.length) {
+            tableRows.forEach(r => {
+              const name = r.name || r.component || r.item || r.part || Object.values(r)[0] || '';
+              const qty = r.qty || r.quantity || '1';
+              const model = r.model || r['part no'] || r['part #'] || '';
+              const purpose = r.purpose || r.function || r.description || '';
+              const notes = r.notes || r.specifications || '';
+              if (name) components.push({ name, qty, model, purpose, notes });
+            });
+          } else {
+            const listItems = secs.components.split('\n')
+              .map(l => l.replace(/^[-*•]\s+/, '').trim())
+              .filter(l => l && !l.startsWith('#') && !l.startsWith('|'));
+            listItems.forEach(item => {
+              const parts = item.split('|').map(p => p.trim());
+              if (parts.length > 1) {
+                components.push({ name: parts[0], qty: parts[1] || '1', model: parts[2] || '', purpose: parts[3] || '', notes: parts[4] || '' });
+              } else {
+                components.push({ name: item, qty: '1', model: '', purpose: '', notes: '' });
+              }
+            });
+          }
+        }
+
+        (codeAnalysisList || []).forEach(ca => {
+          (ca.components || []).forEach(c => {
+            if (!components.some(existing => existing.name.toLowerCase().includes(c.model.toLowerCase()) || existing.name.toLowerCase().includes(c.name.toLowerCase()))) {
+              components.push(c);
+            }
+          });
+        });
+
+        if (mcu && mcu !== 'None / Software' && !components.some(c => c.name.toLowerCase().includes(mcu.toLowerCase()))) {
+          components.unshift({
+            name: `${mcu} NodeMCU Development Board`,
+            qty: '1',
+            model: mcu === 'ESP32' ? 'ESP-WROOM-32' : mcu,
+            purpose: 'Main Controller',
+            notes: '3.3V logic'
+          });
+        }
+
+        let connections = [];
+        if (secs.connections) {
+          const connRows = this.parseMarkdownTable(secs.connections);
+          connRows.forEach(r => {
+            const comp = r.component || r.device || r.module || Object.values(r)[0] || '';
+            const compPin = r['component pin'] || r['pin'] || r['comp pin'] || '';
+            const ctrlPin = r['controller pin'] || r['mcu pin'] || r['gpio'] || '';
+            const notes = r.notes || r.comment || '';
+            if (comp) connections.push({ component: comp, compPin, ctrlPin, notes });
+          });
+        }
+        (codeAnalysisList || []).forEach(ca => {
+          (ca.connections || []).forEach(c => {
+            if (!connections.some(existing => existing.ctrlPin === c.ctrlPin)) {
+              connections.push(c);
+            }
+          });
+        });
+
+        let problems = secs.problems || '';
+        if (!problems && isHardware && mcu === 'ESP32') {
+          problems = 'Always use ADC1 pins (GPIO 32-39) on ESP32 when Wi-Fi is active, as ADC2 is shared with the Wi-Fi radio.';
+        }
+
+        let improvements = secs.improvements || '';
+        if (!improvements) {
+          improvements = isHardware ? 'Add deep-sleep power cycling to run on LiPo battery for extended periods. Integrate telemetry alerts.' : 'Add comprehensive test coverage, automated CI workflows, and containerized deployment.';
+        }
+
+        let learned = secs.learned || '';
+        if (!learned) {
+          learned = isHardware ? `${mcu} pinout architecture, analogue sensor threshold calibration, and I2C hardware bus requirements.` : 'Modular application design, dependency management, and robust error boundary handling.';
+        }
+
+        const resources = [];
+        if (secs.resources) {
+          const resMatches = secs.resources.match(/https?:\/\/[^\s)\]]+/g);
+          if (resMatches) resMatches.forEach(u => resources.push(u));
+        }
+        (rm.links || []).forEach(u => {
+          if (!resources.includes(u) && resources.length < 5) resources.push(u);
+        });
+        if (mcu === 'ESP32' && !resources.some(r => r.includes('espressif.com'))) {
+          resources.push('https://docs.espressif.com/projects/arduino-esp32/en/latest/');
+        }
+
+        const codeFiles = (rawFiles || []).map(f => ({
+          id: uid('cf'),
+          name: f.name,
+          lang: this.detectLanguage(f.name),
+          code: f.content
+        }));
+
+        const images = (rm.images || []).map(img => {
+          let resolvedUrl = img.url;
+          if (!resolvedUrl.startsWith('http')) {
+            const cleanPath = resolvedUrl.replace(/^\.?\//, '');
+            resolvedUrl = `https://raw.githubusercontent.com/${repoMeta.owner?.login || repoMeta.owner}/${repoMeta.name}/${repoMeta.default_branch || 'main'}/${cleanPath}`;
+          }
+          return {
+            url: resolvedUrl,
+            caption: img.alt || title
+          };
+        }).slice(0, 4);
+
+        const githubMeta = {
+          owner: repoMeta.owner?.login || repoMeta.owner,
+          repo: repoMeta.name,
+          branch: repoMeta.default_branch || 'main',
+          commitSha: repoMeta.latestCommitSha || '',
+          url: repoMeta.html_url || `https://github.com/${repoMeta.owner?.login || repoMeta.owner}/${repoMeta.name}`,
+          analyzedAt: Date.now(),
+          stars: repoMeta.stargazers_count || 0,
+          language: repoMeta.language || '',
+          topics: repoMeta.topics || []
+        };
+
+        return {
+          title,
+          category,
+          status: repoMeta.archived ? 'planned' : 'working',
+          mcu,
+          icon,
+          tags,
+          description,
+          aim,
+          problem,
+          what,
+          how,
+          components,
+          connections,
+          problems,
+          improvements,
+          learned,
+          resources,
+          codeFiles,
+          images,
+          githubMeta,
+          fileCount: (rawFiles || []).length + (rm.raw ? 1 : 0)
+        };
+      },
+
+      async checkUpdates(project) {
+        if (!project || !project.github) throw new Error('No GitHub repository linked to this project.');
+        const parsed = this.parseUrl(project.github);
+        if (!parsed) throw new Error('Invalid GitHub repository URL.');
+
+        const metaRes = await this.fetchWithAuth(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`);
+        const meta = await metaRes.json();
+        const branch = meta.default_branch || 'main';
+
+        const commitRes = await this.fetchWithAuth(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits/${branch}`);
+        const commitData = await commitRes.json();
+        const latestSha = commitData.sha;
+        const oldSha = project.githubMeta?.commitSha;
+
+        if (oldSha && oldSha === latestSha) {
+          return {
+            isUpToDate: true,
+            latestSha,
+            commitMessage: commitData.commit?.message || '',
+            commitDate: commitData.commit?.committer?.date || '',
+            author: commitData.commit?.author?.name || ''
+          };
+        }
+
+        let changedFiles = [];
+        if (oldSha) {
+          try {
+            const compareRes = await this.fetchWithAuth(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/compare/${oldSha}...${latestSha}`);
+            const compareData = await compareRes.json();
+            changedFiles = (compareData.files || []).map(f => ({
+              filename: f.filename,
+              status: f.status,
+              additions: f.additions,
+              deletions: f.deletions
+            }));
+          } catch (e) { }
+        }
+
+        return {
+          isUpToDate: false,
+          oldSha,
+          latestSha,
+          branch,
+          commitMessage: commitData.commit?.message || '',
+          commitDate: commitData.commit?.committer?.date || '',
+          author: commitData.commit?.author?.name || '',
+          changedFiles,
+          parsed
+        };
+      }
+    };
+
+    /* ══════════════════════════════════════════════
+       GITHUB UI CONTROLLERS & EVENT BINDINGS
+    ══════════════════════════════════════════════ */
+    let ghInputDebounceTimer = null;
+
+    function handleGithubUrlInput() {
+      clearTimeout(ghInputDebounceTimer);
+      const val = (document.getElementById('fGithub')?.value || '').trim();
+      const clearBtn = document.getElementById('clearGithubBtn');
+      const badge = document.getElementById('repoDetectedBadge');
+      const analyseBtn = document.getElementById('analyseRepoBtn');
+
+      if (clearBtn) clearBtn.classList.toggle('hidden', !val);
+
+      ghInputDebounceTimer = setTimeout(() => {
+        const parsed = GitHubEngine.parseUrl(val);
+        if (parsed) {
+          badge.textContent = `✓ ${parsed.fullName}`;
+          badge.classList.remove('hidden');
+          analyseBtn.disabled = false;
+          analyseBtn.classList.add('btn-primary');
+          analyseBtn.title = `Analyse ${parsed.fullName} and populate project form`;
+        } else {
+          badge.classList.add('hidden');
+          analyseBtn.disabled = true;
+          analyseBtn.title = 'Enter a valid GitHub URL to analyse';
+        }
+      }, 250);
+    }
+
+    function updateGithubFieldState(url) {
+      const val = (url || '').trim();
+      const input = document.getElementById('fGithub');
+      if (input) input.value = val;
+      const clearBtn = document.getElementById('clearGithubBtn');
+      const badge = document.getElementById('repoDetectedBadge');
+      const analyseBtn = document.getElementById('analyseRepoBtn');
+      const btnText = document.getElementById('analyseBtnText');
+
+      if (clearBtn) clearBtn.classList.toggle('hidden', !val);
+
+      const parsed = GitHubEngine.parseUrl(val);
+      if (parsed) {
+        if (badge) {
+          badge.textContent = `✓ ${parsed.fullName}`;
+          badge.classList.remove('hidden');
+        }
+        if (analyseBtn) {
+          analyseBtn.disabled = false;
+          analyseBtn.classList.add('btn-primary');
+        }
+        if (btnText) {
+          btnText.textContent = editingProject ? '↻ Sync / Re-analyse' : '⚡ Analyse Repo';
+        }
+      } else {
+        if (badge) badge.classList.add('hidden');
+        if (analyseBtn) analyseBtn.disabled = true;
+        if (btnText) btnText.textContent = '⚡ Analyse Repo';
+      }
+    }
+
+    function resetRepoAnalysisUI() {
+      document.getElementById('repoAnalysisBox')?.classList.add('hidden');
+      document.getElementById('repoSuccessBanner')?.classList.add('hidden');
+      document.getElementById('repoErrorBanner')?.classList.add('hidden');
+      document.getElementById('repoOverwriteWarning')?.classList.add('hidden');
+      const logContent = document.getElementById('repoLogContent');
+      if (logContent) {
+        logContent.textContent = '';
+        logContent.classList.add('hidden');
+      }
+      const logToggle = document.getElementById('repoLogToggle');
+      if (logToggle) logToggle.textContent = '▶ Show details';
+      document.querySelectorAll('.repo-step').forEach(s => s.classList.remove('active', 'done'));
+    }
+
+    function showRepoStatus(stepId, text, pct) {
+      const box = document.getElementById('repoAnalysisBox');
+      if (box) box.classList.remove('hidden');
+      const msg = document.getElementById('repoStatusMsg');
+      if (msg) msg.textContent = text;
+      const fill = document.getElementById('repoProgressFill');
+      if (fill) fill.style.width = pct + '%';
+
+      const steps = ['step-connect', 'step-tree', 'step-readme', 'step-code', 'step-extract', 'step-populate'];
+      let foundCurrent = false;
+      steps.forEach(sid => {
+        const el = document.getElementById(sid);
+        if (!el) return;
+        if (sid === stepId) {
+          el.className = 'repo-step active';
+          foundCurrent = true;
+        } else if (!foundCurrent) {
+          el.className = 'repo-step done';
+        } else {
+          el.className = 'repo-step';
+        }
+      });
+    }
+
+    function appendRepoLog(text) {
+      const logContent = document.getElementById('repoLogContent');
+      if (logContent) {
+        const time = new Date().toLocaleTimeString();
+        logContent.textContent += `[${time}] ${text}\n`;
+        logContent.scrollTop = logContent.scrollHeight;
+      }
+    }
+
+    function showRepoSuccessBanner(data) {
+      document.getElementById('repoAnalysisBox')?.classList.add('hidden');
+      document.getElementById('repoErrorBanner')?.classList.add('hidden');
+      document.getElementById('repoOverwriteWarning')?.classList.add('hidden');
+
+      const banner = document.getElementById('repoSuccessBanner');
+      if (!banner) return;
+      banner.classList.remove('hidden');
+
+      const commitBadge = document.getElementById('repoCommitBadge');
+      if (commitBadge && data.githubMeta) {
+        commitBadge.textContent = `${data.githubMeta.branch} @ ${(data.githubMeta.commitSha || '').slice(0, 7) || 'HEAD'}`;
+      }
+
+      const pillsContainer = document.getElementById('repoSuccessPills');
+      if (pillsContainer) {
+        const pills = [];
+        pills.push(`<span class="repo-pill">📁 ${data.fileCount || 0} files inspected</span>`);
+        if (data.mcu && data.mcu !== 'None / Software') pills.push(`<span class="repo-pill">⚙️ ${esc(data.mcu)}</span>`);
+        if (data.connections && data.connections.length) pills.push(`<span class="repo-pill">⚡ ${data.connections.length} pin connections</span>`);
+        if (data.components && data.components.length) pills.push(`<span class="repo-pill">📦 ${data.components.length} components</span>`);
+        if (data.codeFiles && data.codeFiles.length) pills.push(`<span class="repo-pill">💻 ${data.codeFiles.length} source files attached</span>`);
+        pillsContainer.innerHTML = pills.join(' ');
+      }
+    }
+
+    function showRepoErrorBanner(title, message) {
+      document.getElementById('repoAnalysisBox')?.classList.add('hidden');
+      document.getElementById('repoSuccessBanner')?.classList.add('hidden');
+      document.getElementById('repoOverwriteWarning')?.classList.add('hidden');
+
+      const banner = document.getElementById('repoErrorBanner');
+      if (!banner) return;
+      banner.classList.remove('hidden');
+      const titleEl = document.getElementById('repoErrorTitle');
+      if (titleEl) titleEl.textContent = title || 'Analysis Failed';
+      const msgEl = document.getElementById('repoErrorMsg');
+      if (msgEl) msgEl.textContent = message || 'An unexpected error occurred during repository analysis.';
+    }
+
+    function checkExistingFormData() {
+      const g = id => (document.getElementById(id)?.value || '').trim();
+      const fields = ['fTitle', 'fDesc', 'fAim', 'fProblem', 'fWhat', 'fHow', 'fComponents', 'fProblems', 'fImprovements', 'fLearned'];
+      const populated = fields.filter(f => Boolean(g(f)));
+      return populated.length > 0;
+    }
+
+    function applyExtractedData(data, mode = 'all') {
+      if (!data) return;
+      const s = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (mode === 'empty-only' && el.value && el.value.trim().length > 0) return;
+        el.value = val || '';
+      };
+
+      s('fTitle', data.title);
+      s('fCategory', data.category || 'Robotics');
+      s('fStatus', data.status || 'working');
+      s('fMcu', data.mcu || '');
+      s('fIcon', data.icon || '⚙');
+      s('fTags', (data.tags || []).join(', '));
+      s('fDesc', data.description || '');
+      s('fAim', data.aim || '');
+      s('fProblem', data.problem || '');
+      s('fWhat', data.what || '');
+      s('fHow', data.how || '');
+      s('fProblems', data.problems || '');
+      s('fImprovements', data.improvements || '');
+      s('fLearned', data.learned || '');
+      s('fResources', (data.resources || []).join('\n'));
+
+      if (data.components && data.components.length > 0) {
+        if (!(mode === 'empty-only' && document.getElementById('fComponents')?.value?.trim())) {
+          const compStr = data.components.map(c => {
+            if (typeof c === 'string') return c;
+            return [c.name, c.qty || '1', c.model || '', c.purpose || '', c.notes || ''].filter(Boolean).join(' | ');
+          }).join('\n');
+          s('fComponents', compStr);
+        }
+      }
+
+      pendingRepoData = data;
+      showRepoSuccessBanner(data);
+      showToast('Project form populated from GitHub!', 'success');
+    }
+
+    async function runRepositoryAnalysis() {
+      const urlInput = document.getElementById('fGithub');
+      const url = (urlInput?.value || '').trim();
+      const parsed = GitHubEngine.parseUrl(url);
+
+      if (!parsed) {
+        showRepoErrorBanner('Invalid Repository URL', 'Please enter a valid GitHub repository link (e.g. https://github.com/owner/repository).');
+        return;
+      }
+
+      resetRepoAnalysisUI();
+      repoAnalysisAbortController = new AbortController();
+      const signal = repoAnalysisAbortController.signal;
+
+      const analyseBtn = document.getElementById('analyseRepoBtn');
+      if (analyseBtn) analyseBtn.disabled = true;
+
+      try {
+        appendRepoLog(`Starting analysis for: ${parsed.fullName}`);
+        showRepoStatus('step-connect', `Connecting to ${parsed.fullName}…`, 15);
+
+        // Step 1: Metadata
+        appendRepoLog(`Fetching repository metadata from GitHub REST API...`);
+        const metaRes = await GitHubEngine.fetchWithAuth(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`, signal);
+        const meta = await metaRes.json();
+        const branch = parsed.branch || meta.default_branch || 'main';
+        appendRepoLog(`Connected. Default branch: ${branch}, Language: ${meta.language || 'Unspecified'}, Stars: ${meta.stargazers_count}`);
+
+        // Get latest commit SHA
+        let latestCommitSha = '';
+        try {
+          const commitRes = await GitHubEngine.fetchWithAuth(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits/${branch}`, signal);
+          const commitObj = await commitRes.json();
+          latestCommitSha = commitObj.sha || '';
+          meta.latestCommitSha = latestCommitSha;
+          appendRepoLog(`Latest commit: ${latestCommitSha.slice(0, 7)}`);
+        } catch (e) {
+          appendRepoLog(`Could not retrieve commit SHA (using HEAD).`);
+        }
+
+        // Step 2: File Structure Tree
+        showRepoStatus('step-tree', 'Retrieving repository file structure…', 30);
+        appendRepoLog(`Requesting recursive git tree for branch "${branch}"...`);
+        const treeRes = await GitHubEngine.fetchWithAuth(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/git/trees/${branch}?recursive=1`, signal);
+        const treeData = await treeRes.json();
+        const tree = treeData.tree || [];
+        appendRepoLog(`Discovered ${tree.length} total entries in repository.`);
+
+        // Classify files
+        const ignoreDirs = ['node_modules', 'bower_components', 'vendor', 'dist', 'build', 'out', 'target', '.git', '__pycache__', '.vscode', '.idea'];
+        const ignoreExts = ['.exe', '.bin', '.hex', '.elf', '.o', '.a', '.so', '.dll', '.class', '.jar', '.pyc', '.zip', '.tar', '.gz', '.pdf', '.min.js', '.min.css', '.map'];
+
+        const validBlobs = tree.filter(item => {
+          if (item.type !== 'blob') return false;
+          const p = item.path.toLowerCase();
+          if (ignoreDirs.some(d => p.startsWith(d + '/') || p.includes('/' + d + '/'))) return false;
+          if (ignoreExts.some(ext => p.endsWith(ext))) return false;
+          if (p.endsWith('package-lock.json') || p.endsWith('yarn.lock') || p.endsWith('pnpm-lock.yaml')) return false;
+          return true;
+        });
+        appendRepoLog(`Filtered ${validBlobs.length} relevant candidate source & documentation files.`);
+
+        // Identify key files
+        let readmeItem = validBlobs.find(b => /^readme(\.md|\.markdown|\.txt)?$/i.test(b.path));
+        if (!readmeItem) readmeItem = validBlobs.find(b => /readme/i.test(b.path));
+
+        const hardwareSourceFiles = validBlobs.filter(b => /\.(ino|pde|cpp|c|h|hpp)$/i.test(b.path)).slice(0, 6);
+        const softwareSourceFiles = validBlobs.filter(b => /(main|app|index|server)\.(py|js|ts|go|rs|jsx|tsx)$/i.test(b.path)).slice(0, 4);
+        const configFiles = validBlobs.filter(b => /(platformio\.ini|package\.json|requirements\.txt|Cargo\.toml)$/i.test(b.path)).slice(0, 3);
+
+        // Step 3: Fetch & Analyse README
+        showRepoStatus('step-readme', 'Analysing documentation and README…', 50);
+        let parsedReadme = {};
+        if (readmeItem) {
+          appendRepoLog(`Downloading README file: ${readmeItem.path} (${Math.round((readmeItem.size || 0) / 1024)} KB)...`);
+          try {
+            const readmeText = await GitHubEngine.fetchRawFile(parsed.owner, parsed.repo, branch, readmeItem.path, signal);
+            parsedReadme = GitHubEngine.parseReadme(readmeText);
+            appendRepoLog(`Parsed README: Title="${parsedReadme.title || meta.name}", Sections found: ${Object.keys(parsedReadme.sections || {}).join(', ') || 'General'}`);
+          } catch (e) {
+            appendRepoLog(`Warning: Failed to fetch README content: ${e.message}`);
+          }
+        } else {
+          appendRepoLog(`No README found. Utilizing repository metadata and source inspection.`);
+        }
+
+        // Step 4: Fetch & Analyse Source Code
+        showRepoStatus('step-code', 'Analysing source code and pin configurations…', 75);
+        const filesToFetch = [...hardwareSourceFiles];
+        if (filesToFetch.length < 5) filesToFetch.push(...softwareSourceFiles);
+        if (filesToFetch.length < 6) filesToFetch.push(...configFiles);
+
+        const fetchedFiles = [];
+        const codeAnalyses = [];
+
+        for (const item of filesToFetch.slice(0, 6)) {
+          appendRepoLog(`Downloading source file: ${item.path}...`);
+          try {
+            const content = await GitHubEngine.fetchRawFile(parsed.owner, parsed.repo, branch, item.path, signal);
+            fetchedFiles.push({ name: item.path.split('/').pop(), path: item.path, content });
+
+            if (/\.(ino|pde|cpp|c|h|hpp)$/i.test(item.path)) {
+              const ca = GitHubEngine.analyzeArduinoCode(item.path, content);
+              codeAnalyses.push(ca);
+              appendRepoLog(`Inspected ${item.path}: Detected MCU=${ca.mcu || 'Generic'}, Pins=${ca.pins.length}, Modules=${ca.components.length}`);
+            } else if (/\.py$/i.test(item.path)) {
+              const pyAnalysis = GitHubEngine.analyzePythonCode(item.path, content);
+              if (pyAnalysis.mcu) codeAnalyses.push({ mcu: pyAnalysis.mcu, components: [], connections: [] });
+              appendRepoLog(`Inspected ${item.path}: Libraries=${pyAnalysis.libraries.slice(0, 5).join(', ')}`);
+            }
+          } catch (e) {
+            appendRepoLog(`Warning: Skipped ${item.path}: ${e.message}`);
+          }
+        }
+
+        // Step 5: Synthesize
+        showRepoStatus('step-extract', 'Structuring project intelligence…', 90);
+        appendRepoLog(`Synthesizing metadata, pinouts, components, and descriptions...`);
+        const synthesized = GitHubEngine.synthesizeProject(meta, tree, parsedReadme, codeAnalyses, fetchedFiles);
+        appendRepoLog(`Extraction complete: Category="${synthesized.category}", MCU="${synthesized.mcu || 'None'}", ${synthesized.components.length} components, ${synthesized.connections.length} pin connections.`);
+
+        // Step 6: Populate Form
+        showRepoStatus('step-populate', 'Populating project form…', 100);
+
+        if (checkExistingFormData()) {
+          appendRepoLog(`Notice: Form already contains user input. Presenting overwrite choices.`);
+          document.getElementById('repoAnalysisBox')?.classList.add('hidden');
+          const warn = document.getElementById('repoOverwriteWarning');
+          if (warn) warn.classList.remove('hidden');
+
+          document.getElementById('overwriteAllBtn').onclick = () => {
+            warn.classList.add('hidden');
+            applyExtractedData(synthesized, 'all');
+          };
+          document.getElementById('overwriteEmptyBtn').onclick = () => {
+            warn.classList.add('hidden');
+            applyExtractedData(synthesized, 'empty-only');
+          };
+          document.getElementById('overwriteCancelBtn').onclick = () => {
+            warn.classList.add('hidden');
+            showToast('Repository data kept on standby. You can apply it anytime.', 'info');
+          };
+        } else {
+          applyExtractedData(synthesized, 'all');
+        }
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          appendRepoLog('Analysis cancelled by user.');
+          resetRepoAnalysisUI();
+          showToast('Repository analysis cancelled.', 'info');
+        } else {
+          console.error('[Project Vault] Analysis error:', err);
+          appendRepoLog(`Error: ${err.message}`);
+          showRepoErrorBanner('Analysis Failed', err.message);
+        }
+      } finally {
+        if (analyseBtn) analyseBtn.disabled = false;
+        repoAnalysisAbortController = null;
+      }
+    }
+
+    function cancelRepositoryAnalysis() {
+      if (repoAnalysisAbortController) {
+        repoAnalysisAbortController.abort();
+      }
+    }
+
+    function openGithubSettingsModal() {
+      const modal = document.getElementById('githubSettingsModal');
+      if (!modal) return;
+      const input = document.getElementById('ghTokenInput');
+      if (input) input.value = GitHubEngine.getToken();
+      const geminiInput = document.getElementById('geminiKeyInput');
+      if (geminiInput) geminiInput.value = localStorage.getItem(GitHubEngine.GEMINI_STORAGE_KEY) || '';
+      document.getElementById('ghTokenStatus').textContent = GitHubEngine.getToken() ? 'Token configured' : 'Unauthenticated (60 req/hr)';
+      modal.classList.remove('hidden');
+    }
+
+    function closeGithubSettingsModal() {
+      document.getElementById('githubSettingsModal')?.classList.add('hidden');
+    }
+
+    function saveGithubSettings() {
+      const token = document.getElementById('ghTokenInput')?.value || '';
+      GitHubEngine.setToken(token);
+      const geminiKey = document.getElementById('geminiKeyInput')?.value || '';
+      if (geminiKey.trim()) localStorage.setItem(GitHubEngine.GEMINI_STORAGE_KEY, geminiKey.trim());
+      else localStorage.removeItem(GitHubEngine.GEMINI_STORAGE_KEY);
+      closeGithubSettingsModal();
+      showToast('GitHub settings saved.', 'success');
+    }
+
+    async function testGithubToken() {
+      const token = document.getElementById('ghTokenInput')?.value || '';
+      const statusEl = document.getElementById('ghTokenStatus');
+      const testBtn = document.getElementById('testGhTokenBtn');
+      if (testBtn) testBtn.disabled = true;
+      if (statusEl) statusEl.textContent = 'Testing connection…';
+
+      try {
+        const info = await GitHubEngine.testConnection(token);
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color:var(--s-working);">✓ Connected as ${esc(info.login)} (${info.remaining}/${info.limit} req/hr)</span>`;
+        }
+        showToast(`GitHub connection verified! Limit: ${info.remaining}/${info.limit}`, 'success');
+      } catch (err) {
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color:var(--s-debug);">✕ ${esc(err.message)}</span>`;
+        }
+        showToast('Connection test failed: ' + err.message, 'error');
+      } finally {
+        if (testBtn) testBtn.disabled = false;
+      }
+    }
+
+    async function handleDetailSyncGithub(projectId) {
+      const p = projects.find(x => x.id === (projectId || currentDetailId));
+      if (!p || !p.github) {
+        showToast('No GitHub repository linked to this project.', 'error');
+        return;
+      }
+
+      showToast('Checking GitHub for repository updates…', 'info');
+      try {
+        const result = await GitHubEngine.checkUpdates(p);
+        if (result.isUpToDate) {
+          showToast(`Repository is up to date! (Commit: ${result.latestSha.slice(0, 7)})`, 'success');
+          return;
+        }
+
+        activeSyncProject = p;
+        activeSyncDiff = result;
+
+        const modal = document.getElementById('githubSyncModal');
+        const title = document.getElementById('githubSyncModalTitle');
+        const body = document.getElementById('githubSyncBody');
+
+        if (title) title.textContent = `Sync "${p.title}" from GitHub`;
+        if (body) {
+          const filesHTML = (result.changedFiles || []).map(f => {
+            const badgeClass = f.status === 'added' ? 'badge-working' : (f.status === 'removed' ? 'badge-debug' : 'badge-progress');
+            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border);">
+              <span style="font-family:'JetBrains Mono',monospace;">${esc(f.filename)}</span>
+              <span class="badge ${badgeClass}" style="font-size:10px;">${esc(f.status)}</span>
+            </div>`;
+          }).join('') || '<div style="color:var(--text-3);font-size:12px;">Files changed between commits.</div>';
+
+          body.innerHTML = `
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:14px;">
+              <div style="font-weight:600;color:var(--text);">${esc(result.commitMessage)}</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;">
+                Branch: <strong>${esc(result.branch)}</strong> · Latest commit: <code>${esc(result.latestSha.slice(0, 7))}</code>
+                ${result.oldSha ? ` (previously ${esc(result.oldSha.slice(0, 7))})` : ''}
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:6px;text-transform:uppercase;color:var(--text-3);">Changed Files</div>
+            <div style="max-height:140px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;margin-bottom:14px;">
+              ${filesHTML}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="syncUpdateCode" checked> Update and sync source code files
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="syncUpdateDocs"> Re-extract documentation (preserves manual edits)
+              </label>
+            </div>
+          `;
+        }
+
+        modal.classList.remove('hidden');
+      } catch (err) {
+        showToast('Sync check failed: ' + err.message, 'error');
+      }
+    }
+
+    function closeGithubSyncModal() {
+      document.getElementById('githubSyncModal')?.classList.add('hidden');
+      activeSyncProject = null;
+      activeSyncDiff = null;
+    }
+
+    async function confirmGithubSync() {
+      if (!activeSyncProject || !activeSyncDiff) return;
+      const p = activeSyncProject;
+      const diff = activeSyncDiff;
+      const updateCode = document.getElementById('syncUpdateCode')?.checked;
+      const updateDocs = document.getElementById('syncUpdateDocs')?.checked;
+
+      showToast('Applying repository updates…', 'info');
+      try {
+        p.githubMeta = p.githubMeta || {};
+        p.githubMeta.commitSha = diff.latestSha;
+        p.githubMeta.analyzedAt = Date.now();
+
+        if (updateCode) {
+          const treeRes = await GitHubEngine.fetchWithAuth(`https://api.github.com/repos/${diff.parsed.owner}/${diff.parsed.repo}/git/trees/${diff.branch}?recursive=1`);
+          const treeData = await treeRes.json();
+          const tree = treeData.tree || [];
+          const codeBlobs = tree.filter(b => b.type === 'blob' && /\.(ino|pde|cpp|c|h|hpp|py|js|html)$/i.test(b.path)).slice(0, 5);
+
+          const updatedFiles = [];
+          for (const b of codeBlobs) {
+            try {
+              const code = await GitHubEngine.fetchRawFile(diff.parsed.owner, diff.parsed.repo, diff.branch, b.path);
+              updatedFiles.push({
+                id: uid('cf'),
+                name: b.path.split('/').pop(),
+                lang: GitHubEngine.detectLanguage(b.path),
+                code
+              });
+            } catch (e) { }
+          }
+          if (updatedFiles.length) {
+            p.codeFiles = updatedFiles;
+            p.codeVersions = p.codeVersions || [];
+            p.codeVersions.unshift({
+              id: uid('ver'),
+              name: `v${p.codeVersions.length + 1}.0 — GitHub Sync (${diff.latestSha.slice(0, 7)})`,
+              date: new Date().toISOString(),
+              description: `Synced commit: ${diff.commitMessage}`,
+              isStable: true,
+              files: structuredClone(updatedFiles)
+            });
+          }
+        }
+
+        p.changelog = p.changelog || [];
+        p.changelog.unshift({
+          id: uid('cl'),
+          date: new Date().toISOString().slice(0, 10),
+          title: 'GitHub Sync',
+          category: 'Code',
+          note: `Synced latest commit ${diff.latestSha.slice(0, 7)}: "${diff.commitMessage.slice(0, 60)}"`
+        });
+
+        p.updatedAt = Date.now();
+        saveProjects();
+        closeGithubSyncModal();
+        showToast('Repository sync complete!', 'success');
+        if (currentDetailId === p.id) openDetail(p.id);
+      } catch (err) {
+        showToast('Failed to apply sync: ' + err.message, 'error');
+      }
+    }
+
+    function initGitHubIntegration() {
+      GitHubEngine.initLocalToken();
+
+      const ghInput = document.getElementById('fGithub');
+      if (ghInput) {
+        ghInput.addEventListener('input', handleGithubUrlInput);
+        ghInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const btn = document.getElementById('analyseRepoBtn');
+            if (btn && !btn.disabled) runRepositoryAnalysis();
+          }
+        });
+      }
+
+      document.getElementById('analyseRepoBtn')?.addEventListener('click', runRepositoryAnalysis);
+      document.getElementById('cancelAnalysisBtn')?.addEventListener('click', cancelRepositoryAnalysis);
+
+      document.getElementById('clearGithubBtn')?.addEventListener('click', () => {
+        const input = document.getElementById('fGithub');
+        if (input) {
+          input.value = '';
+          handleGithubUrlInput();
+          input.focus();
+        }
+      });
+
+      document.getElementById('repoLogToggle')?.addEventListener('click', () => {
+        const logBox = document.getElementById('repoLogContent');
+        const btn = document.getElementById('repoLogToggle');
+        if (logBox && btn) {
+          const isHidden = logBox.classList.toggle('hidden');
+          btn.textContent = isHidden ? '▶ Show details' : '▼ Hide details';
+        }
+      });
+
+      document.getElementById('repoRetryBtn')?.addEventListener('click', runRepositoryAnalysis);
+      document.getElementById('repoOpenSettingsBtn')?.addEventListener('click', openGithubSettingsModal);
+      document.getElementById('repoDismissErrBtn')?.addEventListener('click', () => {
+        document.getElementById('repoErrorBanner')?.classList.add('hidden');
+      });
+
+      document.getElementById('repoSettingsBtn')?.addEventListener('click', openGithubSettingsModal);
+      document.getElementById('closeGithubSettingsBtn')?.addEventListener('click', closeGithubSettingsModal);
+      document.getElementById('cancelGithubSettingsBtn')?.addEventListener('click', closeGithubSettingsModal);
+      document.getElementById('saveGithubSettingsBtn')?.addEventListener('click', saveGithubSettings);
+      document.getElementById('testGhTokenBtn')?.addEventListener('click', testGithubToken);
+      document.getElementById('toggleGhTokenVisibility')?.addEventListener('click', () => {
+        const inp = document.getElementById('ghTokenInput');
+        if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+      });
+
+      document.getElementById('detailSyncGithubBtn')?.addEventListener('click', () => handleDetailSyncGithub(currentDetailId));
+      document.getElementById('closeGithubSyncBtn')?.addEventListener('click', closeGithubSyncModal);
+      document.getElementById('cancelGithubSyncBtn')?.addEventListener('click', closeGithubSyncModal);
+      document.getElementById('confirmGithubSyncBtn')?.addEventListener('click', confirmGithubSync);
+
+      document.getElementById('repoQuickTip')?.addEventListener('click', () => {
+        const el = document.getElementById('fGithub');
+        if (el) {
+          el.focus();
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    /* ══════════════════════════════════════════════
        PROJECT FORM (ADD / EDIT)
     ══════════════════════════════════════════════ */
     function openProjectForm(project = null) {
       editingProject = project;
       unsavedChanges = false;
+      pendingRepoData = null;
       document.getElementById('fId').value = project?.id || '';
       document.getElementById('formTitle').textContent = project ? 'Edit Project' : 'New Project';
       document.getElementById('formSubtitle').textContent = project ? 'Update documentation and hardware configurations.' : 'Fill in what you know — you can refine anytime.';
@@ -4948,6 +6660,9 @@ void loop() {
       }).join('\n');
       s('fComponents', compStr);
 
+      resetRepoAnalysisUI();
+      updateGithubFieldState(project?.github || '');
+
       document.querySelectorAll('.field-error').forEach(e => e.classList.add('hidden'));
       document.getElementById('formOverlay').classList.remove('hidden');
       document.getElementById('fTitle').focus();
@@ -4957,6 +6672,8 @@ void loop() {
       document.getElementById('formOverlay').classList.add('hidden');
       editingProject = null;
       unsavedChanges = false;
+      pendingRepoData = null;
+      resetRepoAnalysisUI();
     }
 
     function saveProjectForm() {
@@ -5001,35 +6718,46 @@ void loop() {
         github: g('fGithub'),
         resources: g('fResources').split('\n').map(r => r.trim()).filter(Boolean),
         components,
-        connections: existing?.connections || [],
-        milestones: existing?.milestones || [
+        connections: (existing?.connections && existing.connections.length > 0) ? existing.connections : (pendingRepoData?.connections || []),
+        milestones: existing?.milestones || (pendingRepoData?.milestones || [
           { id: 'm1', title: 'Define project scope and requirements', completed: true, dateCompleted: new Date().toISOString().slice(0, 10) },
           { id: 'm2', title: 'Gather components and assemble hardware', completed: false, dateCompleted: null },
           { id: 'm3', title: 'Write and test core firmware', completed: false, dateCompleted: null },
           { id: 'm4', title: 'System integration and field testing', completed: false, dateCompleted: null }
-        ],
-        codeFiles: existing?.codeFiles || [],
-        codeVersions: existing?.codeVersions || [],
-        buildLogs: existing?.buildLogs || [],
-        testing: existing?.testing || [],
-        changelog: existing?.changelog || [{ id: uid('cl'), date: new Date().toISOString().slice(0, 10), title: 'Created', category: 'Design', note: 'Project initialized.' }],
-        images: existing?.images || [],
+        ]),
+        codeFiles: (existing?.codeFiles && existing.codeFiles.length > 0) ? existing.codeFiles : (pendingRepoData?.codeFiles || []),
+        codeVersions: (existing?.codeVersions && existing.codeVersions.length > 0) ? existing.codeVersions : (pendingRepoData?.codeFiles?.length ? [
+          {
+            id: uid('ver'),
+            name: `v1.0 — GitHub Import (${(pendingRepoData.githubMeta?.commitSha || '').slice(0, 7) || 'HEAD'})`,
+            date: new Date().toISOString(),
+            description: `Initial code import from GitHub repository (${pendingRepoData.githubMeta?.owner}/${pendingRepoData.githubMeta?.repo}).`,
+            isStable: true,
+            files: structuredClone(pendingRepoData.codeFiles)
+          }
+        ] : []),
+        buildLogs: existing?.buildLogs || (pendingRepoData?.buildLogs || []),
+        testing: existing?.testing || (pendingRepoData?.testing || []),
+        changelog: existing?.changelog || [{ id: uid('cl'), date: new Date().toISOString().slice(0, 10), title: 'Created', category: 'Design', note: pendingRepoData?.githubMeta ? `Imported & extracted from GitHub repository (${pendingRepoData.githubMeta.owner}/${pendingRepoData.githubMeta.repo}).` : 'Project initialized.' }],
+        images: (existing?.images && existing.images.length > 0) ? existing.images : (pendingRepoData?.images || []),
+        githubMeta: existing?.githubMeta || pendingRepoData?.githubMeta || null,
         starred: existing?.starred || false,
         archived: existing?.archived || false,
         createdAt: existing?.createdAt || Date.now(),
         updatedAt: Date.now(),
         lastOpenedAt: existing?.lastOpenedAt || Date.now()
-  };
+      };
 
-    if (existing) {
-      projects = projects.map(x => x.id === id ? p : x);
-    } else {
-      projects.unshift(p);
-    }
+      if (existing) {
+        projects = projects.map(x => x.id === id ? p : x);
+      } else {
+        projects.unshift(p);
+      }
 
-    saveProjects();
-    closeProjectForm();
-    showToast(existing ? 'Project updated.' : 'Project created.', 'success');
+      saveProjects();
+      pendingRepoData = null;
+      closeProjectForm();
+      showToast(existing ? 'Project updated.' : 'Project created.', 'success');
 
     if (currentDetailId === id) openDetail(id);
     else if (currentView === 'dashboard') renderDashboard();
@@ -6315,6 +8043,9 @@ void loop() {
       // Initial render
       updateCounts();
       renderDashboard();
+
+      // GitHub Repository Integration
+      initGitHubIntegration();
     }
 
     document.addEventListener('DOMContentLoaded', init);
